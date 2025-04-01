@@ -94,6 +94,14 @@ def create_driver(config: Config) -> webdriver.Chrome | webdriver.Firefox:
 
 def check_official_version(version: str) -> bool:
     try:
+        # Add this line to log current version
+        logging.info(f"Current version: {version}")
+        
+        # Skip version check in docker environment
+        if os.environ.get("REMOTE_CHROME_HOST"):
+            logging.info("Skipping version check in Docker environment")
+            return True
+            
         official_version = get_last_version()
         if version == official_version:
             return True
@@ -107,11 +115,18 @@ def check_official_version(version: str) -> bool:
 
 
 def get_last_version() -> str:
-    response = requests.get("https://raw.githubusercontent.com/Yajusta/Chapito/refs/heads/main/pyproject.toml")
-    response.raise_for_status()
-    if match := re.search(r'version\s*=\s*"([^"]+)"', response.text):
-        return match[1]
-    return "0.0.0"
+    try:
+        # Use explicit protocol scheme and full URL
+        url = "https://raw.githubusercontent.com/Yajusta/Chapito/refs/heads/main/pyproject.toml"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        if match := re.search(r'version\s*=\s*"([^"]+)"', response.text):
+            return match[1]
+        return "0.0.0"
+    except Exception as e:
+        logging.error(f"Failed to get latest version: {e}")
+        # Return a default version to avoid further errors
+        return "0.0.0"
 
 
 def greeting(version: str) -> None:
