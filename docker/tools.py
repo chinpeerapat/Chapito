@@ -4,7 +4,6 @@ import time
 from chapito.config import Config
 from chapito.types import OsType
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.options import Options as WebDriverOptions
 import pyperclip
 import logging
 import requests
@@ -56,15 +55,14 @@ def create_driver(config: Config) -> webdriver.Chrome | webdriver.Firefox:
     if remote_chrome_host:
         # Remote WebDriver setup
         logging.info(f"Using remote Chrome at {remote_chrome_host}:{remote_chrome_port}")
-        options = WebDriverOptions()
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument(f"user-agent={config.browser_user_agent}")
-        options.add_argument("--start-maximized")
-        options.add_argument("--no-sandbox")
-        options.set_capability("browserName", "chrome")
+        chrome_options = Options()
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument(f"user-agent={config.browser_user_agent}")
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument("--no-sandbox")
         driver = webdriver.Remote(
             command_executor=f"http://{remote_chrome_host}:{remote_chrome_port}/wd/hub",
-            options=options
+            options=chrome_options
         )
     else:
         # Local WebDriver setup
